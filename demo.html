@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Touchy demo - Draw dots</title>
+
+		<meta content="yes" name="apple-mobile-web-app-capable">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+		<style>
+			#touch-me {
+				z-index: 1;
+				position: absolute;
+				top: 0;
+				left: 0;
+				height: 100%;
+				width: 100%;
+			}
+
+			.point {
+				z-index: 2;
+				position: absolute;
+				margin: -12px 0 0 -12px;
+				height: 25px;
+				width: 25px;
+				background: #000;
+				border-radius: 12px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id="touch-me"></div>
+
+		<script src="touchy.js"></script>
+		<script>
+			Touchy.stopWindowBounce();
+
+			var touchMe = document.getElementById('touch-me');
+
+			Touchy(touchMe, function (finger) {
+				finger.on('move', function (point) {
+					var elem = document.createElement('div');
+					elem.className = 'point';
+					elem.style.top = point.y + 'px';
+					elem.style.left = point.x + 'px';
+					touchMe.appendChild(elem);
+				});
+			});
+		</script>
+	</body>
+</html>
