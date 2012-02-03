@@ -1,4 +1,11 @@
-/* Socket-style finger management for touch events */
+/*
+	Touchy.js
+	Socket-style finger management for touch events
+
+	Jairaj Sethi
+*/
+
+
 
 (function () {
 	/* Make sure I can itereate through arrays */
