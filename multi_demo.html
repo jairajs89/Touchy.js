@@ -37,7 +37,24 @@
 
 			var touchMe = document.getElementById('touch-me');
 
+			//TODO: lingering point when switching between touch counts
 			Touchy.multi(touchMe, {
+				one: function (fingers) {
+					function drawPoints (points) {
+						points.forEach(function (point) {
+							var elem = document.createElement('div');
+							elem.className = 'point';
+							elem.style.top = point.y + 'px';
+							elem.style.left = point.x + 'px';
+							elem.style.background = 'red';
+							touchMe.appendChild(elem);
+						});
+					}
+
+					fingers.on('start', drawPoints);
+					fingers.on('move' , drawPoints);
+					fingers.on('end'  , drawPoints);
+				},
 				two: function (fingers) {
 					function drawPoints (points) {
 						points.forEach(function (point) {
