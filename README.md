@@ -12,6 +12,8 @@ var touchMe = document.getElementById('touch-me');
 
 // Touchy.js creates a single global object called 'Touchy'
 Touchy(touchMe, function (hand, finger) {
+	// This function will be called for every finger that touches the screen
+
 	// 'finger' is an object representing the entire path of a finger
 	// on the screen. So a touch-drag-release by a single finger would be
 	// encapsulated into this single object.
