@@ -80,34 +80,6 @@
 
 
 
-	/* Simple object to hold all current touch interaction on an element */
-	function TouchWindow () {
-		this.fingers = [];
-	}
-
-	/* Returns the number of fingers touching the element */
-	TouchWindow.prototype.count = function () {
-		return this.fingers.length;
-	};
-
-	/* New finger touching the element */
-	TouchWindow.prototype.add = function (finger) {
-		var index = this.fingers.indexOf(finger);
-
-		if (index == -1)
-			this.fingers.push(finger);
-	};
-
-	/* Finger no longer touching the element */
-	TouchWindow.prototype.remove = function (finger) {
-		var index = this.fingers.indexOf(finger);
-
-		if (index != -1)
-			this.fingers.splice(index, 1);
-	};
-
-
-
 	/* Object to manage a single-finger interactions */
 	function Finger (id) {
 		this.id        = id;
@@ -150,7 +122,7 @@
 
 	/* Object to manage multiple-finger interactions */
 	function Hand (ids) {
-		this.fingers = ids.map(function (id) {
+		this.fingers = !ids ? [] : ids.map(function (id) {
 			return new Finger(id);
 		});
 
@@ -252,7 +224,7 @@
 	/* Socket-style finger management for touch events */
 	function Touchy (elem, func) {
 		var fingers = {},
-			touchWindow = new TouchWindow();
+			hand = new Hand([]);
 
 		bind(elem, 'touchstart', touchstart);
 		bind(elem, 'touchmove' , touchmove );
@@ -268,9 +240,9 @@
 
 				var finger = new Finger( touch.id );
 				fingers[ touch.id ] = finger;
-				touchWindow.add(finger);
+				hand.add(finger);
 
-				func(finger, touchWindow);
+				func(finger, hand);
 
 				finger.startEvent(touch);
 			});
@@ -299,7 +271,7 @@
 				}
 
 				var finger = fingers[ touch.id ];
-				touchWindow.remove(finger);
+				hand.remove(finger);
 
 				finger.endEvent(touch);
 			});
