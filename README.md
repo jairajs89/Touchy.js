@@ -69,6 +69,7 @@ Touchy(touchMe, {
 		});
 	}
 
-	// 'three', 'four', 'five' are supported as well
+	// 'three', 'four', 'five' are supported as well.
+	// 'any' is the same as the previous example.
 });
 ```
