@@ -1,7 +1,7 @@
 ## Touchy.js
 ### Because some things just need to be touched.
 
-Touchy.js is a simple light-weight (1.11 kb compressed) JavaScript library for dealing with touch events in the browser. With no dependencies, just add the script to your page and start hacking.
+Touchy.js is a simple light-weight (1.12 kb compressed) JavaScript library for dealing with touch events in the browser. With no dependencies, just add the script to your page and start hacking.
 
 
 ## Quick example
@@ -11,17 +11,17 @@ Touchy.js is a simple light-weight (1.11 kb compressed) JavaScript library for d
 var touchMe = document.getElementById('touch-me');
 
 // Touchy.js creates a single global object called 'Touchy'
-Touchy(touchMe, function (finger, hand) {
+Touchy(touchMe, function (hand, finger) {
 	// 'finger' is an object representing the entire path of a finger
 	// on the screen. So a touch-drag-release by a single finger would be
 	// encapsulated into this single object.
 
 	// 'hand' is an object holding all fingers currently interacting with the
 	// screen.
-	// 'hand.count()' returns the number of fingers currently on the screen
+	// 'hand.fingers' returns an Array of fingers currently on the screen
 	// including this one.
 	// In this case we are only listening to a single finger at a time.
-	if (hand.count() > 1) {
+	if (hand.fingers.length > 1) {
 		return;
 	}
 
@@ -54,12 +54,12 @@ Touchy(touchMe, function (finger, hand) {
 var touchMe = document.getElementById('touch-me');
 
 Touchy.multi(touchMe, {
-	one: function (hand) {
+	one: function (hand, finger) {
 		// Full touchy style event system, run only when exactly one finger
 		// on screen.
 	},
 
-	two: function (hand) {
+	two: function (hand, finger1, finger2) {
 		// Only run when exactly two fingers on screen
 		hand.on('move', function (points) {
 			// 'points' is an Array of point objects (same as finger.on point object)

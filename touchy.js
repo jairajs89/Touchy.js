@@ -143,7 +143,7 @@
 	};
 
 	/* Remove an inactive finger from the hand */
-	Hand.prototype.remove = function () {
+	Hand.prototype.remove = function (finger) {
 		var index = this.fingers.indexOf(finger);
 
 		if (index != -1) {
@@ -172,7 +172,7 @@
 	/* Bind event listeners to finger movements */
 	Hand.prototype.on = function (name, callback) {
 		this.callbacks[name].push(callback);
-	}
+	};
 
 	/* Trigger finger movement event */
 	Hand.prototype.trigger = function (name) {
@@ -184,7 +184,7 @@
 		this.callbacks[name].forEach(function (callback) {
 			callback.call(that, points);
 		});
-	}
+	};
 
 	/* Construct generic finger movement event trigger */
 	function handEvent (eventName) {
@@ -242,7 +242,7 @@
 				fingers[ touch.id ] = finger;
 				hand.add(finger);
 
-				func(finger, hand);
+				func(hand, finger);
 
 				finger.startEvent(touch);
 			});
@@ -353,8 +353,8 @@
 					3: 'three',
 					4: 'four',
 					5: 'five'
-				}[count] ]
-				func && func(hand);
+				}[count] ];
+				func && func.apply(window, [hand].concat(hand.fingers));
 
 				hand.startEvent(touches);
 			}
