@@ -149,7 +149,7 @@
 
 
 	/* Object to manage multiple-finger interactions */
-	function MultiFinger (ids) {
+	function Hand (ids) {
 		this.fingers = ids.map(function (id) {
 			return new Finger(id);
 		});
@@ -161,8 +161,31 @@
 		};
 	}
 
+	/* Add an active finger to the hand */
+	Hand.prototype.add = function (finger) {
+		var index = this.fingers.indexOf(finger);
+
+		if (index == -1) {
+			this.fingers.push(finger);
+		}
+	};
+
+	/* Remove an inactive finger from the hand */
+	Hand.prototype.remove = function () {
+		var index = this.fingers.indexOf(finger);
+
+		if (index != -1) {
+			this.fingers.splice(index, 1);
+		}
+	};
+
+	/* Return the number of active fingers */
+	Hand.prototype.count = function () {
+		return this.fingers.length;
+	};
+
 	/* Check if finger-id is associated with multi-finger interaction */
-	MultiFinger.prototype.has = function (id) {
+	Hand.prototype.has = function (id) {
 		var found = false;
 
 		this.fingers.forEach(function (finger) {
@@ -175,12 +198,12 @@
 	};
 
 	/* Bind event listeners to finger movements */
-	MultiFinger.prototype.on = function (name, callback) {
+	Hand.prototype.on = function (name, callback) {
 		this.callbacks[name].push(callback);
 	}
 
 	/* Trigger finger movement event */
-	MultiFinger.prototype.trigger = function (name) {
+	Hand.prototype.trigger = function (name) {
 		var that = this,
 			points = that.fingers.map(function (finger) {
 				return finger.points[ finger.points.length - 1 ];
@@ -192,8 +215,8 @@
 	}
 
 	/* Construct generic finger movement event trigger */
-	function multiFingerEvent (eventName) {
-		MultiFinger.prototype[eventName + 'Event'] = function (touches) {
+	function handEvent (eventName) {
+		Hand.prototype[eventName + 'Event'] = function (touches) {
 			var self = this;
 
 			touches.forEach(function (touch) {
@@ -207,9 +230,9 @@
 			this.trigger(eventName);
 		};
 	}
-	multiFingerEvent('start');
-	multiFingerEvent('move');
-	multiFingerEvent('end');
+	handEvent('start');
+	handEvent('move');
+	handEvent('end');
 
 
 
@@ -287,7 +310,7 @@
 
 	/* Socket-style finger management for multi-touch events */
 	Touchy.multi = function (elem, settings) {
-		var fingers,
+		var hand,
 			count = 0;
 
 		bind(elem, 'touchstart', touchstart);
@@ -317,7 +340,7 @@
 			// Check for new fingers
 			if ( !hasNewFingers ) {
 				touches.forEach(function (touch) {
-					if ( !fingers.has(touch.id) ) {
+					if ( !hand.has(touch.id) ) {
 						hasNewFingers = true;
 					}
 				});
@@ -325,27 +348,27 @@
 
 			// Trigger move event for fingers
 			if ( !hasNewFingers ) {
-				fingers.moveEvent(touches);
+				hand.moveEvent(touches);
 			}
 
 			// Trigger end event for old fingers and destroy handler
-			if (fingers && (hasNewFingers || end)) {
+			if (hand && (hasNewFingers || end)) {
 				var endTouches = touches;
 
 				if ( !end ) {
-					endTouches = fingers.fingers.map(function (finger) {
+					endTouches = hand.fingers.map(function (finger) {
 						return finger.points[ finger.points.length - 1 ];
 					});
 				}
 
-				fingers.endEvent(touches);
-				fingers = null;
+				hand.endEvent(touches);
+				hand = null;
 				count = 0;
 			}
 
 			// Create new finger handler and trigger start
 			if (hasNewFingers) {
-				fingers = new MultiFinger(
+				hand = new Hand(
 					touches.map(function (touch) {
 						return touch.id;
 					})
@@ -359,9 +382,9 @@
 					4: 'four',
 					5: 'five'
 				}[count] ]
-				func && func(fingers);
+				func && func(hand);
 
-				fingers.startEvent(touches);
+				hand.startEvent(touches);
 			}
 		}
 	};
