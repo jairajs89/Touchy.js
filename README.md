@@ -60,6 +60,10 @@ Touchy(touchMe, {
 	one: function (hand, finger) {
 		// Full touchy style event system, run only when exactly one finger
 		// on screen.
+
+		// In these cases 'hand' is only alive for the duration of touches that
+		// have the exact number of simulataneous touches (unlike in the
+		// previous example).
 	},
 
 	two: function (hand, finger1, finger2) {
