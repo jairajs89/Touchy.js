@@ -37,18 +37,22 @@
 
 			var touchMe = document.getElementById('touch-me');
 
-			Touchy(touchMe, function (finger) {
-				function drawPoint (point) {
-					var elem = document.createElement('div');
-					elem.className = 'point';
-					elem.style.top = point.y + 'px';
-					elem.style.left = point.x + 'px';
-					touchMe.appendChild(elem);
-				}
+			Touchy.multi(touchMe, {
+				two: function (fingers) {
+					function drawPoints (points) {
+						points.forEach(function (point) {
+							var elem = document.createElement('div');
+							elem.className = 'point';
+							elem.style.top = point.y + 'px';
+							elem.style.left = point.x + 'px';
+							touchMe.appendChild(elem);
+						});
+					}
 
-				finger.on('start', drawPoint);
-				finger.on('move' , drawPoint);
-				finger.on('end'  , drawPoint);
+					fingers.on('start', drawPoints);
+					fingers.on('move' , drawPoints);
+					fingers.on('end'  , drawPoints);
+				}
 			});
 		</script>
 	</body>
