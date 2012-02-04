@@ -156,6 +156,19 @@
 		return this.fingers.length;
 	};
 
+	/* Get finger by id */
+	Hand.prototype.get = function (id) {
+		var foundFinger;
+
+		this.fingers.forEach(function (finger) {
+			if (finger.id == id) {
+				foundFinger = finger;
+			}
+		});
+
+		return foundFinger;
+	};
+
 	/* Check if finger-id is associated with multi-finger interaction */
 	Hand.prototype.has = function (id) {
 		var found = false;
@@ -221,68 +234,14 @@
 	}
 
 
-	/* Socket-style finger management for touch events */
-	function Touchy (elem, func) {
-		var fingers = {},
-			hand = new Hand([]);
-
-		bind(elem, 'touchstart', touchstart);
-		bind(elem, 'touchmove' , touchmove );
-		bind(elem, 'touchend'  , touchend  );
-
-		/* Register finger and start listening for movement */
-		function touchstart (e) {
-			domTouchToObj(e.touches, e.timeStamp).forEach(function (touch) {
-				if ( fingers[ touch.id ] ) {
-					// Identifier is already registered
-					return;
-				}
-
-				var finger = new Finger( touch.id );
-				fingers[ touch.id ] = finger;
-				hand.add(finger);
-
-				func(hand, finger);
-
-				finger.startEvent(touch);
-			});
-		}
-
-		/* Register finger movement */
-		function touchmove (e) {
-			domTouchToObj(e.touches, e.timeStamp).forEach(function (touch) {
-				if ( ! fingers[ touch.id ] ) {
-					// Identifier is not registered
-					return;
-				}
-
-				var finger = fingers[ touch.id ];
-
-				finger.moveEvent(touch);
-			});
-		}
-
-		/* Register finger release and end of input */
-		function touchend (e) {
-			domTouchToObj(e.changedTouches, e.timeStamp).forEach(function (touch) {
-				if ( ! fingers[ touch.id ] ) {
-					// Identifier is not registered
-					return;
-				}
-
-				var finger = fingers[ touch.id ];
-				hand.remove(finger);
-
-				finger.endEvent(touch);
-			});
-		}
-	}
-
-
-
 	/* Socket-style finger management for multi-touch events */
-	Touchy.multi = function (elem, settings) {
+	function Touchy (elem, settings) {
+		if (typeof settings == 'function') {
+			settings = { any: settings };
+		}
+
 		var hand,
+			mainHand = new Hand(),
 			count = 0;
 
 		bind(elem, 'touchstart', touchstart);
@@ -308,6 +267,34 @@
 				),
 				newCount = touches.length,
 				hasNewFingers = newCount != count;
+
+			// Separate hand management for independent finger eventing
+			touches.forEach(function (touch) {
+				var finger = mainHand.get(touch.id);
+
+				// End event for finger
+				if (end) {
+					if ( finger ) {
+						finger.endEvent(touch);
+						mainHand.remove(finger);
+					}
+				}
+
+				// Move event for finger
+				else if (finger) {
+					finger.moveEvent(touch);
+				}
+
+				// Start event for finger
+				else {
+					finger = new Finger( touch.id );
+					mainHand.add(finger);
+
+					settings.any && settings.any(mainHand, finger);
+
+					finger.startEvent(touch);
+				}
+			});
 
 			// Check for new fingers
 			if ( !hasNewFingers ) {

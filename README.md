@@ -1,7 +1,7 @@
 ## Touchy.js
 ### Because some things just need to be touched.
 
-Touchy.js is a simple light-weight (1.12 kb compressed) JavaScript library for dealing with touch events in the browser. With no dependencies, just add the script to your page and start hacking.
+Touchy.js is a simple light-weight (1.11 kb compressed) JavaScript library for dealing with touch events in the browser. With no dependencies, just add the script to your page and start hacking.
 
 
 ## Quick example
@@ -13,6 +13,7 @@ var touchMe = document.getElementById('touch-me');
 // Touchy.js creates a single global object called 'Touchy'
 Touchy(touchMe, function (hand, finger) {
 	// This function will be called for every finger that touches the screen
+	// regardless of what other fingers are currently interacting.
 
 	// 'finger' is an object representing the entire path of a finger
 	// on the screen. So a touch-drag-release by a single finger would be
@@ -55,7 +56,7 @@ Touchy(touchMe, function (hand, finger) {
 ``` javascript
 var touchMe = document.getElementById('touch-me');
 
-Touchy.multi(touchMe, {
+Touchy(touchMe, {
 	one: function (hand, finger) {
 		// Full touchy style event system, run only when exactly one finger
 		// on screen.
