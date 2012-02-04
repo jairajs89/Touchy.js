@@ -9,44 +9,68 @@
 
 (function () {
 	/* Make sure I can itereate through arrays */
-	if ( !Array.prototype.forEach ) {
-		Array.prototype.forEach = function (callback, self) {
-			for (var i=0, l=this.length; i<l; i++) {
-				if (i in this) {
-					callback.call(self, this[i], i, this);
+	var forEach = function () {
+		if (Array.prototype.forEach) {
+			return function (arr, callback, self) {
+				Array.prototype.forEach.call(arr, callback, self);
+			};
+		}
+
+		else {
+			return function (arr, callback, self) {
+				for (var i=0, l=arr.length; i<l; i++) {
+					if (i in arr) {
+						callback.call(self, arr[i], i, arr);
+					}
 				}
-			}
-		};
-	}
+			};
+		}
+	}();
 
 	/* Make sure I can search through arrays */
-	if ( !Array.prototype.indexOf ) {
-		Array.prototype.indexOf = function (item, startIndex) {
-			for (var i=startIndex || 0, len=this.length; i<len; i++) {
-				if ((i in this) && (this[i] === item)) {
-					return i;
-				}
-			}
+	var indexOf = function () {
+		if (Array.prototype.indexOf) {
+			return function (arr, item, startIndex) {
+				return Array.prototype.indexOf.call(arr, item, startIndex);
+			};
+		}
 
-			return -1;
-		};
-	}
+		else {
+			return function (arr, item, startIndex) {
+				for (var i=startIndex || 0, len=arr.length; i<len; i++) {
+					if ((i in arr) && (arr[i] === item)) {
+						return i;
+					}
+				}
+
+				return -1;
+			};
+		}
+	}();
 
 	/* Make sure I can map arrays */
-	if ( !Array.prototype.map ) {
-		Array.prototype.map = function (callback, self) {
-			var len = this.length,
-				arr = new Array(len);
+	var map = function () {
+		if (Array.prototype.map) {
+			return function (arr, callback, self) {
+				return Array.prototype.map.call(arr, callback, self);
+			};
+		}
 
-			for (var i=0; i<len; i++) {
-				if (i in this) {
-					arr[i] = callback.call(self, this[i], i, this);
+		else {
+			return function (arr, callback, self) {
+				var len = arr.length,
+					mapArr = new Array(len);
+
+				for (var i=0; i<len; i++) {
+					if (i in arr) {
+						mapArr[i] = callback.call(self, arr[i], i, arr);
+					}
 				}
-			}
 
-			return arr;
-		};
-	}
+				return mapArr;
+			};
+		}
+	}();
 
 	/* Bind event listener to element */
 	var boundEvents = {};
@@ -101,7 +125,7 @@
 		var that = this,
 			point = that.points[ that.points.length - 1 ];
 
-		this.callbacks[name].forEach(function (callback) {
+		forEach(this.callbacks[name], function (callback) {
 			callback.call(that, point);
 		});
 	};
@@ -122,7 +146,7 @@
 
 	/* Object to manage multiple-finger interactions */
 	function Hand (ids) {
-		this.fingers = !ids ? [] : ids.map(function (id) {
+		this.fingers = !ids ? [] : map(ids, function (id) {
 			return new Finger(id);
 		});
 
@@ -135,7 +159,7 @@
 
 	/* Add an active finger to the hand */
 	Hand.prototype.add = function (finger) {
-		var index = this.fingers.indexOf(finger);
+		var index = indexOf(this.fingers, finger);
 
 		if (index == -1) {
 			this.fingers.push(finger);
@@ -144,7 +168,7 @@
 
 	/* Remove an inactive finger from the hand */
 	Hand.prototype.remove = function (finger) {
-		var index = this.fingers.indexOf(finger);
+		var index = indexOf(this.fingers, finger);
 
 		if (index != -1) {
 			this.fingers.splice(index, 1);
@@ -160,7 +184,7 @@
 	Hand.prototype.get = function (id) {
 		var foundFinger;
 
-		this.fingers.forEach(function (finger) {
+		forEach(this.fingers, function (finger) {
 			if (finger.id == id) {
 				foundFinger = finger;
 			}
@@ -173,7 +197,7 @@
 	Hand.prototype.has = function (id) {
 		var found = false;
 
-		this.fingers.forEach(function (finger) {
+		forEach(this.fingers, function (finger) {
 			if (finger.id == id) {
 				found = true;
 			}
@@ -190,11 +214,11 @@
 	/* Trigger finger movement event */
 	Hand.prototype.trigger = function (name) {
 		var that = this,
-			points = that.fingers.map(function (finger) {
+			points = map(that.fingers, function (finger) {
 				return finger.points[ finger.points.length - 1 ];
 			});
 
-		this.callbacks[name].forEach(function (callback) {
+		forEach(this.callbacks[name], function (callback) {
 			callback.call(that, points);
 		});
 	};
@@ -204,8 +228,8 @@
 		Hand.prototype[eventName + 'Event'] = function (touches) {
 			var self = this;
 
-			touches.forEach(function (touch) {
-				self.fingers.forEach(function (finger) {
+			forEach(touches, function (touch) {
+				forEach(self.fingers, function (finger) {
 					if (finger.id == touch.id) {
 						finger[eventName + 'Event'](touch);
 					}
@@ -223,7 +247,7 @@
 
 	/* Convert DOM touch event object to simple dictionary style object */
 	function domTouchToObj (touches, time) {
-		return Array.prototype.map.call(touches, function (touch) {
+		return map(touches, function (touch) {
 			return {
 				id: touch.identifier,
 				x: touch.pageX,
@@ -269,7 +293,7 @@
 				hasNewFingers = newCount != count;
 
 			// Separate hand management for independent finger eventing
-			touches.forEach(function (touch) {
+			forEach(touches, function (touch) {
 				var finger = mainHand.get(touch.id);
 
 				// End event for finger
@@ -298,7 +322,7 @@
 
 			// Check for new fingers
 			if ( !hasNewFingers ) {
-				touches.forEach(function (touch) {
+				forEach(touches, function (touch) {
 					if ( !hand.has(touch.id) ) {
 						hasNewFingers = true;
 					}
@@ -315,7 +339,7 @@
 				var endTouches = touches;
 
 				if ( !end ) {
-					endTouches = hand.fingers.map(function (finger) {
+					endTouches = map(hand.fingers, function (finger) {
 						return finger.points[ finger.points.length - 1 ];
 					});
 				}
@@ -328,7 +352,7 @@
 			// Create new finger handler and trigger start
 			if (hasNewFingers) {
 				hand = new Hand(
-					touches.map(function (touch) {
+					map(touches, function (touch) {
 						return touch.id;
 					})
 				);
