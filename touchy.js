@@ -72,6 +72,31 @@
 		}
 	}();
 
+	/* Make sure I can filter arrays */
+	var filter = function () {
+		if (Array.prototype.filter) {
+			return function (arr, func, self) {
+				return Array.prototype.filter.call(arr, func, self);
+			};
+		}
+
+		else {
+			return function (arr, func, self) {
+				var filterArr = [];
+
+				for (var val, i=0, len=arr.length; i<len; i++) {
+					val = arr[i];
+
+					if ((i in arr) && func.call(self, val, i, arr)) {
+						filterArr.push(val);
+					}
+				}
+
+				return filterArr;
+			};
+		}
+	}();
+
 	/* Bind event listener to element */
 	var boundEvents = {};
 
@@ -121,26 +146,13 @@
 	};
 
 	/* Trigger finger movement event */
-	Finger.prototype.trigger = function (name) {
-		var that = this,
-			point = that.points[ that.points.length - 1 ];
+	Finger.prototype.trigger = function (name, point) {
+		var that = this;
 
 		forEach(this.callbacks[name], function (callback) {
 			callback.call(that, point);
 		});
 	};
-
-	/* Construct generic finger movement event trigger */
-	function fingerEvent (eventName) {
-		// Finger.prototype[eventName + 'Event'] = function (x, y, time) {
-		Finger.prototype[eventName + 'Event'] = function (touch) {
-			this.points.push(touch);
-			this.trigger(eventName);
-		};
-	}
-	fingerEvent('start');
-	fingerEvent('move');
-	fingerEvent('end');
 
 
 
@@ -175,11 +187,6 @@
 		}
 	};
 
-	/* Return the number of active fingers */
-	Hand.prototype.count = function () {
-		return this.fingers.length;
-	};
-
 	/* Get finger by id */
 	Hand.prototype.get = function (id) {
 		var foundFinger;
@@ -212,36 +219,13 @@
 	};
 
 	/* Trigger finger movement event */
-	Hand.prototype.trigger = function (name) {
-		var that = this,
-			points = map(that.fingers, function (finger) {
-				return finger.points[ finger.points.length - 1 ];
-			});
+	Hand.prototype.trigger = function (name, points) {
+		var that = this;
 
 		forEach(this.callbacks[name], function (callback) {
 			callback.call(that, points);
 		});
 	};
-
-	/* Construct generic finger movement event trigger */
-	function handEvent (eventName) {
-		Hand.prototype[eventName + 'Event'] = function (touches) {
-			var self = this;
-
-			forEach(touches, function (touch) {
-				forEach(self.fingers, function (finger) {
-					if (finger.id == touch.id) {
-						finger[eventName + 'Event'](touch);
-					}
-				});
-			});
-
-			this.trigger(eventName);
-		};
-	}
-	handEvent('start');
-	handEvent('move');
-	handEvent('end');
 
 
 
@@ -264,8 +248,8 @@
 			settings = { any: settings };
 		}
 
-		var hand,
-			mainHand = new Hand(),
+		var mainHand = new Hand(),
+			multiHand,
 			count = 0;
 
 		bind(elem, 'touchstart', touchstart);
@@ -273,102 +257,178 @@
 		bind(elem, 'touchend'  , touchend  );
 
 		function touchstart (e) {
-			updateFingers(e, false);
+			var touches = domTouchToObj(e.touches, e.timeStamp),
+				changedTouches = domTouchToObj(e.changedTouches, e.timeStamp);
+
+			mainHandStart(changedTouches);
+			multiHandStart(changedTouches, touches);
 		}
 
 		function touchmove (e) {
-			updateFingers(e, false);
+			var touches = domTouchToObj(e.touches, e.timeStamp),
+				changedTouches = domTouchToObj(e.changedTouches, e.timeStamp);
+
+			mainHandMove(changedTouches);
+			multiHandMove(changedTouches, touches);
 		}
 
 		function touchend (e) {
-			updateFingers(e, true);
+			var touches = domTouchToObj(e.touches, e.timeStamp),
+				changedTouches = domTouchToObj(e.changedTouches, e.timeStamp);
+
+			mainHandEnd(changedTouches);
+			multiHandEnd(changedTouches, touches);
 		}
 
-		function updateFingers (e, end) {
-			var touches = domTouchToObj(
-					e[end ? 'changedTouches' : 'touches'],
-					e.timeStamp
-				),
-				newCount = touches.length,
-				hasNewFingers = newCount != count;
+		/* Handle the start of an individual finger interaction */
+		function mainHandStart (changedTouches) {
+			var newFingers = [];
 
-			// Separate hand management for independent finger eventing
-			forEach(touches, function (touch) {
-				var finger = mainHand.get(touch.id);
-
-				// End event for finger
-				if (end) {
-					if ( finger ) {
-						finger.endEvent(touch);
-						mainHand.remove(finger);
-					}
-				}
-
-				// Move event for finger
-				else if (finger) {
-					finger.moveEvent(touch);
-				}
-
-				// Start event for finger
-				else {
-					finger = new Finger( touch.id );
-					mainHand.add(finger);
-
-					settings.any && settings.any(mainHand, finger);
-
-					finger.startEvent(touch);
-				}
+			forEach(changedTouches, function (touch) {
+				var finger = new Finger(touch.id);
+				finger.points.push(touch);
+				newFingers.push([finger, touch]);
+				mainHand.add(finger);
 			});
 
-			// Check for new fingers
-			if ( !hasNewFingers ) {
-				forEach(touches, function (touch) {
-					if ( !hand.has(touch.id) ) {
-						hasNewFingers = true;
+			forEach(newFingers, function (data) {
+				settings.any && settings.any(mainHand, data[0]);
+				data[0].trigger('start', data[1]);
+			});
+
+			mainHand.trigger('start', changedTouches);
+		}
+
+		/* Handle the movement of an individual finger interaction */
+		function mainHandMove (changedTouches) {
+			var movedFingers = [];
+
+			forEach(changedTouches, function (touch) {
+				var finger = mainHand.get(touch.id);
+				finger.points.push(touch);
+				movedFingers.push([finger, touch]);
+			});
+
+			forEach(movedFingers, function (data) {
+				data[0].trigger('move', data[1]);
+			});
+
+			mainHand.trigger('move', changedTouches);
+		}
+
+		/* Handle the end of an individual finger interaction */
+		function mainHandEnd (changedTouches) {
+			var endFingers = [];
+
+			forEach(changedTouches, function (touch) {
+				var finger = mainHand.get(touch.id);
+				finger.points.push(touch);
+				endFingers.push([finger, touch]);
+				mainHand.remove(finger);
+			});
+
+			forEach(endFingers, function (data) {
+				data[0].trigger('end', data[1]);
+			});
+
+			mainHand.trigger('end', changedTouches);
+		}
+
+		/* Handle the start of a multi-touch interaction */
+		function multiHandStart (changedTouches, touches) {
+			multiHandDestroy();
+			multiHandRestart(touches);
+		}
+
+		/* Handle the movement of a multi-touch interaction */
+		function multiHandMove (changedTouches, touches) {
+			var movedFingers = [];
+
+			forEach(changedTouches, function (touch) {
+				var finger = multiHand.get(touch.id);
+				finger.points.push(touch);
+				movedFingers.push([finger, touch]);
+			});
+
+			forEach(movedFingers, function (data) {
+				data[0].trigger('move', data[1]);
+			});
+
+			multiHand.trigger('move', changedTouches);
+		}
+
+		/* Handle the end of a multi-touch interaction */
+		function multiHandEnd (changedTouches, touches) {
+			multiHandDestroy();
+
+			var remainingTouches = filter(touches, function (touch) {
+				var unChanged = true;
+
+				forEach(changedTouches, function (changedTouch) {
+					if (changedTouch.id == touch.id) {
+						unChanged = false;
 					}
 				});
+
+				return unChanged;
+			});
+
+			multiHandRestart(remainingTouches);
+		}
+
+		function multiHandRestart (touches) {
+			if (touches.length == 0) {
+				return;
 			}
 
-			// Trigger move event for fingers
-			if ( !hasNewFingers ) {
-				hand.moveEvent(touches);
+			multiHand = new Hand();
+			var newFingers = [];
+
+			forEach(touches, function (touch) {
+				var finger = new Finger(touch.id);
+				finger.points.push(touch);
+				newFingers.push([finger, touch]);
+				multiHand.add(finger);
+			});
+
+			multiHandFunc();
+
+			forEach(newFingers, function (data) {
+				data[0].trigger('start', data[1]);
+			});
+
+			multiHand.trigger('start', touches);
+		}
+
+		function multiHandDestroy () {
+			if ( !multiHand ) {
+				return;
 			}
 
-			// Trigger end event for old fingers and destroy handler
-			if (hand && (hasNewFingers || end)) {
-				var endTouches = touches;
+			var points = [];
 
-				if ( !end ) {
-					endTouches = map(hand.fingers, function (finger) {
-						return finger.points[ finger.points.length - 1 ];
-					});
-				}
+			forEach(multiHand.fingers, function (finger) {
+				var point = finger.points[ finger.points.length - 1 ];
+				finger.points.push(point);
+				points.push(point);
+				finger.trigger('end', finger.point);
+			});
 
-				hand.endEvent(touches);
-				hand = null;
-				count = 0;
-			}
+			multiHand.trigger('end', points);
 
-			// Create new finger handler and trigger start
-			if (hasNewFingers) {
-				hand = new Hand(
-					map(touches, function (touch) {
-						return touch.id;
-					})
-				);
-				count = newCount;
+			multiHand = null;
+		}
 
-				var func = settings[ {
-					1: 'one',
-					2: 'two',
-					3: 'three',
-					4: 'four',
-					5: 'five'
-				}[count] ];
-				func && func.apply(window, [hand].concat(hand.fingers));
+		function multiHandFunc () {
+			var func = settings[ {
+				1: 'one',
+				2: 'two',
+				3: 'three',
+				4: 'four',
+				5: 'five'
+			}[ multiHand.fingers.length ] ];
 
-				hand.startEvent(touches);
-			}
+			func && func.apply(window, [multiHand].concat(multiHand.fingers));
 		}
 	};
 
