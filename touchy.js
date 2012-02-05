@@ -363,6 +363,7 @@
 			multiHandRestart(remainingTouches);
 		}
 
+		/* Create a new hand based on the current touches on the screen */
 		function multiHandRestart (touches) {
 			if (touches.length == 0) {
 				return;
@@ -378,7 +379,15 @@
 				multiHand.add(finger);
 			});
 
-			multiHandFunc();
+			var func = settings[ {
+				1: 'one',
+				2: 'two',
+				3: 'three',
+				4: 'four',
+				5: 'five'
+			}[ multiHand.fingers.length ] ];
+
+			func && func.apply(window, [multiHand].concat(multiHand.fingers));
 
 			forEach(newFingers, function (data) {
 				data[0].trigger('start', data[1]);
@@ -387,6 +396,7 @@
 			multiHand.trigger('start', touches);
 		}
 
+		/* Destroy the current hand regardless of fingers on the screen */
 		function multiHandDestroy () {
 			if ( !multiHand ) {
 				return;
@@ -404,18 +414,6 @@
 			multiHand.trigger('end', points);
 
 			multiHand = null;
-		}
-
-		function multiHandFunc () {
-			var func = settings[ {
-				1: 'one',
-				2: 'two',
-				3: 'three',
-				4: 'four',
-				5: 'five'
-			}[ multiHand.fingers.length ] ];
-
-			func && func.apply(window, [multiHand].concat(multiHand.fingers));
 		}
 	};
 
