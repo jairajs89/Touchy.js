@@ -200,19 +200,6 @@
 		return foundFinger;
 	};
 
-	/* Check if finger-id is associated with multi-finger interaction */
-	Hand.prototype.has = function (id) {
-		var found = false;
-
-		forEach(this.fingers, function (finger) {
-			if (finger.id == id) {
-				found = true;
-			}
-		});
-
-		return found;
-	};
-
 	/* Bind event listeners to finger movements */
 	Hand.prototype.on = function (name, callback) {
 		this.callbacks[name].push(callback);
