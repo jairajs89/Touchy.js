@@ -169,6 +169,10 @@
 
 	/* Attach a handler to listen for an event */
 	EventBus.prototype.on = function (name, callback) {
+		if ( !callback ) {
+			return;
+		}
+
 		if (name in this.onEvents) {
 			var index = indexOf(this.onEvents[name], callback);
 
@@ -194,6 +198,10 @@
 
 	/* Attach a one-time-use handler to listen for an event */
 	EventBus.prototype.once = function (name, callback) {
+		if ( !callback ) {
+			return;
+		}
+
 		if (name in this.onceEvents) {
 			var index = indexOf(this.onceEvents[name], callback);
 
@@ -219,6 +227,10 @@
 
 	/* Detach a handler from listening for an event */
 	EventBus.prototype.off = function (name, callback) {
+		if ( !callback ) {
+			return;
+		}
+
 		if (name in this.onEvents) {
 			var index = indexOf(this.onEvents[name], callback);
 
