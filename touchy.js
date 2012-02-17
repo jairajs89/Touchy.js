@@ -18,7 +18,7 @@
 
 		else {
 			return function (arr, callback, self) {
-				for (var i=0, l=arr.length; i<l; i++) {
+				for (var i=0, len=arr.length; i<len; i++) {
 					if (i in arr) {
 						callback.call(self, arr[i], i, arr);
 					}
@@ -118,8 +118,8 @@
 
 		else if (elem.detachEvent) {
 			for (var eID in boundEvents) {
-				if ((boundEvents[eID].name === eventName)
-						&& (boundEvents[eID].callback === callback)) {
+				if ((boundEvents[eID].name === eventName) &&
+						(boundEvents[eID].callback === callback)) {
 					elem.detachEvent(eID);
 					delete boundEvents[eID];
 				}
@@ -129,63 +129,149 @@
 
 
 
-	/* Object to manage a single-finger interactions */
-	function Finger (id) {
-		this.id        = id;
-		this.points    = [];
-		this.callbacks = {
-			'start': [],
-			'move' : [],
-			'end'  : []
-		};
+	/* Simple inheritance */
+	Function.prototype.inherits = function (func) {
+		var proto = this.prototype,
+			superProto = func.prototype,
+			oldSuper;
+
+		for (var prop in superProto) {
+			proto[prop] = superProto[prop];
+		}
+
+		function superMethod (name) {
+			var args = Array.prototype.slice.call(arguments, 1);
+
+			if ( superProto[name] ) {
+				return superProto[name].apply(this, args);
+			}
+		}
+
+		if (proto._super) {
+			oldSuper = proto._super;
+
+			proto._super = function () {
+				oldSuper.call(this, arguments);
+				superMethod.call(this, arguments);
+			};
+		}
+
+		else {
+			proto._super = superMethod;
+		}
+	};
+
+
+
+	/* Event bus to handle finger event listeners */
+	function EventBus () {
+		this.onEvents = {};
+		this.onceEvents = {};
 	}
 
-	/* Bind event listeners to finger movements */
-	Finger.prototype.on = function (name, callback) {
-		this.callbacks[name].push(callback);
+	/* Attach a handler to listen for an event */
+	EventBus.prototype.on = function (name, callback) {
+		if (name in this.onEvents) {
+			var index = indexOf(this.onEvents[name], callback);
+
+			if (index != -1) {
+				return;
+			}
+		}
+
+		else {
+			this.onEvents[name] = [];
+		}
+
+		if (name in this.onceEvents) {
+			var index = indexOf(this.onceEvents[name], callback);
+
+			if (index != -1) {
+				this.onceEvents.splice(index, 1);
+			}
+		}
+
+		this.onEvents[name].push(callback);
 	};
 
-	/* Trigger finger movement event */
-	Finger.prototype.trigger = function (name, point) {
-		var that = this;
+	/* Attach a one-time-use handler to listen for an event */
+	EventBus.prototype.once = function (name, callback) {
+		if (name in this.onceEvents) {
+			var index = indexOf(this.onceEvents[name], callback);
 
-		forEach(this.callbacks[name], function (callback) {
-			callback.call(that, point);
-		});
+			if (index != -1) {
+				return;
+			}
+		}
+
+		else {
+			this.onceEvents[name] = [];
+		}
+
+		if (name in this.onEvents) {
+			var index = indexOf(this.onEvents[name], callback);
+
+			if (index != -1) {
+				this.onEvents.splice(index, 1);
+			}
+		}
+
+		this.onceEvents[name].push(callback);
 	};
+
+	/* Detach a handler from listening for an event */
+	EventBus.prototype.off = function (name, callback) {
+		if (name in this.onEvents) {
+			var index = indexOf(this.onEvents[name], callback);
+
+			if (index != -1) {
+				this.onEvents.splice(index, 1);
+				return;
+			}
+		}
+
+		if (name in this.onceEvents) {
+			var index = indexOf(this.onceEvents[name], callback);
+
+			if (index != -1) {
+				this.onceEvents.splice(index, 1);
+				return;
+			}
+		}
+	};
+
+	/* Fire an event, triggering all handlers */
+	EventBus.prototype.trigger = function (name) {
+		var args = Array.prototype.slice.call(arguments, 1),
+			callbacks = (this.onEvents[name] || []).concat(this.onceEvents[name] || []),
+			callback;
+
+		while (callback = callbacks.shift()) {
+			callback.apply(this, args);
+		}
+	};
+
+
+
+	/* Object to manage a single-finger interactions */
+	function Finger (id) {
+		this._super('constructor');
+		this.id        = id;
+		this.points    = [];
+	}
+	Finger.inherits(EventBus);
 
 
 
 	/* Object to manage multiple-finger interactions */
 	function Hand (ids) {
+		this._super('constructor');
+
 		this.fingers = !ids ? [] : map(ids, function (id) {
 			return new Finger(id);
 		});
-
-		this.callbacks = {
-			'start': [],
-			'move' : [],
-			'end'  : []
-		};
 	}
-
-	/* Add an active finger to the hand */
-	Hand.prototype.add = function (finger) {
-		var index = indexOf(this.fingers, finger);
-
-		if (index == -1) {
-			this.fingers.push(finger);
-		}
-	};
-
-	/* Remove an inactive finger from the hand */
-	Hand.prototype.remove = function (finger) {
-		var index = indexOf(this.fingers, finger);
-
-		if (index != -1) {
-			this.fingers.splice(index, 1);
-		}
-	};
+	Hand.inherits(EventBus);
 
 	/* Get finger by id */
 	Hand.prototype.get = function (id) {
@@ -198,20 +284,6 @@
 		});
 
 		return foundFinger;
-	};
-
-	/* Bind event listeners to finger movements */
-	Hand.prototype.on = function (name, callback) {
-		this.callbacks[name].push(callback);
-	};
-
-	/* Trigger finger movement event */
-	Hand.prototype.trigger = function (name, points) {
-		var that = this;
-
-		forEach(this.callbacks[name], function (callback) {
-			callback.call(that, points);
-		});
 	};
 
 
@@ -273,9 +345,10 @@
 
 			forEach(changedTouches, function (touch) {
 				var finger = new Finger(touch.id);
+
 				finger.points.push(touch);
-				newFingers.push([finger, touch]);
-				mainHand.add(finger);
+				newFingers.push([ finger, touch ]);
+				mainHand.fingers.push(finger);
 			});
 
 			forEach(newFingers, function (data) {
@@ -292,8 +365,9 @@
 
 			forEach(changedTouches, function (touch) {
 				var finger = mainHand.get(touch.id);
+
 				finger.points.push(touch);
-				movedFingers.push([finger, touch]);
+				movedFingers.push([ finger, touch ]);
 			});
 
 			forEach(movedFingers, function (data) {
@@ -308,10 +382,14 @@
 			var endFingers = [];
 
 			forEach(changedTouches, function (touch) {
-				var finger = mainHand.get(touch.id);
+				var finger = mainHand.get(touch.id),
+					index;
+
 				finger.points.push(touch);
-				endFingers.push([finger, touch]);
-				mainHand.remove(finger);
+				endFingers.push([ finger, touch ]);
+
+				index = indexOf(mainHand.fingers, finger);
+				this.fingers.splice(index, 1);
 			});
 
 			forEach(endFingers, function (data) {
@@ -334,7 +412,7 @@
 			forEach(changedTouches, function (touch) {
 				var finger = multiHand.get(touch.id);
 				finger.points.push(touch);
-				movedFingers.push([finger, touch]);
+				movedFingers.push([ finger, touch ]);
 			});
 
 			forEach(movedFingers, function (data) {
@@ -374,9 +452,10 @@
 
 			forEach(touches, function (touch) {
 				var finger = new Finger(touch.id);
+
 				finger.points.push(touch);
-				newFingers.push([finger, touch]);
-				multiHand.add(finger);
+				newFingers.push([ finger, touch ]);
+				multiHand.fingers.push(finger);
 			});
 
 			var func = settings[ {
