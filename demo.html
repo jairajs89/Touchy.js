@@ -25,6 +25,14 @@
 				background: #000;
 				border-radius: 12px;
 			}
+
+			.line {
+				z-index: 2;
+				position: absolute;
+				width: 25px;
+				background: #000;
+				border-radius: 12px;
+			}
 		</style>
 	</head>
 
@@ -37,15 +45,15 @@
 
 			var touchMe = document.getElementById('touch-me');
 
-			Touchy(touchMe, function (hand, finger) {
-				function drawPoint (point) {
-					var elem = document.createElement('div');
-					elem.className = 'point';
-					elem.style.top = point.y + 'px';
-					elem.style.left = point.x + 'px';
-					touchMe.appendChild(elem);
-				}
+			function drawPoint (point) {
+				var elem = document.createElement('div');
+				elem.className = 'point';
+				elem.style.top = point.y + 'px';
+				elem.style.left = point.x + 'px';
+				touchMe.appendChild(elem);
+			}
 
+			Touchy(touchMe, function (hand, finger) {
 				finger.on('start', drawPoint);
 				finger.on('move' , drawPoint);
 				finger.on('end'  , drawPoint);
