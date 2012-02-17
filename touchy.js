@@ -399,7 +399,7 @@
 				endFingers.push([ finger, touch ]);
 
 				index = indexOf(mainHand.fingers, finger);
-				this.fingers.splice(index, 1);
+				mainHand.fingers.splice(index, 1);
 			});
 
 			forEach(endFingers, function (data) {
