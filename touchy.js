@@ -127,12 +127,10 @@
 		}
 	}
 
-
-
 	/* Simple inheritance */
-	Function.prototype.inherits = function (func) {
-		var proto = this.prototype,
-			superProto = func.prototype,
+	function inheritsFrom (func, parent) {
+		var proto = func.prototype,
+			superProto = parent.prototype,
 			oldSuper;
 
 		for (var prop in superProto) {
@@ -259,7 +257,7 @@
 		this.id        = id;
 		this.points    = [];
 	}
-	Finger.inherits(EventBus);
+	inheritsFrom(Finger, EventBus);
 
 
 
@@ -271,7 +269,7 @@
 			return new Finger(id);
 		});
 	}
-	Hand.inherits(EventBus);
+	inheritsFrom(Hand, EventBus);
 
 	/* Get finger by id */
 	Hand.prototype.get = function (id) {
