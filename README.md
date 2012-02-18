@@ -77,3 +77,36 @@ Touchy(touchMe, {
 	// 'any' is the same as the previous example.
 });
 ```
+
+
+# Event handling
+
+``` javascript
+var touchMe = document.getElementById('touch-me');
+
+Touchy(touchMe, function (hand, finger) {
+	function startFinger () {
+		// ...
+	}
+
+	finger.on('start', startFinger);  // Attach startFinger to the start event
+
+	finger.off('start', startFinger); // Detach startFinger from the start event
+
+	finger.once('start', startFinger); // One-time-use handler for start event
+
+	finger.trigger('start', arg1, ..); // Trigger the start event with arguments
+});
+```
+
+
+# Mouse simulation
+
+``` javascript
+var touchMe = document.getElementById('touch-me');
+
+// When the second invocation argument is set to true Touchy will pick up mouse
+// events along with touch events. This is good for testing on desktop.
+Touchy(touchMe, true, callback); // For all finger events
+Touchy(touchMe, true, { one: ..., two: ... }); // For multi-touch finger events
+```
