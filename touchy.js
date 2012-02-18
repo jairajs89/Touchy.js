@@ -310,20 +310,41 @@
 		});
 	}
 
+	function domMouseToObj (mouseEvent, mouseID) {
+		return [{
+			id: mouseID,
+			x: mouseEvent.pageX,
+			y: mouseEvent.pageY,
+			time: mouseEvent.timeStamp
+		}];
+	}
+
 
 	/* Socket-style finger management for multi-touch events */
-	function Touchy (elem, settings) {
+	function Touchy (elem, handleMouse, settings) {
+		if (typeof settings == 'undefined') {
+			settings = handleMouse;
+			handleMouse = false;
+		}
+
 		if (typeof settings == 'function') {
 			settings = { any: settings };
 		}
 
 		var mainHand = new Hand(),
 			multiHand,
+			mouseID,
 			count = 0;
 
 		bind(elem, 'touchstart', touchstart);
 		bind(elem, 'touchmove' , touchmove );
 		bind(elem, 'touchend'  , touchend  );
+
+		if (handleMouse) {
+			bind(elem, 'mousedown' , mousedown );
+			bind(elem, 'mouseup'   , mouseup   );
+			bind(elem, 'mousemove' , mousemove );
+		}
 
 		function touchstart (e) {
 			var touches = domTouchToObj(e.touches, e.timeStamp),
@@ -347,6 +368,44 @@
 
 			mainHandEnd(changedTouches);
 			multiHandEnd(changedTouches, touches);
+		}
+
+		function mousedown (e) {
+			var touches;
+
+			if (mouseID) {
+				touches = domMouseToObj(e, mouseID);
+				mainHandEnd(touches);
+				multiHandEnd(touches, touches);
+				mouseID = null;
+			}
+
+			mouseID = Math.random() + '';
+
+			touches = domMouseToObj(e, mouseID);
+			mainHandStart(touches);
+			multiHandStart(touches, touches);
+		}
+
+		function mouseup (e) {
+			var touches;
+
+			if (mouseID) {
+				touches = domMouseToObj(e, mouseID);
+				mainHandEnd(touches);
+				multiHandEnd(touches, touches);
+				mouseID = null;
+			}
+		}
+
+		function mousemove (e) {
+			var touches;
+
+			if (mouseID) {
+				touches = domMouseToObj(e, mouseID);
+				mainHandMove(touches);
+				multiHandMove(touches, touches);
+			}
 		}
 
 		/* Handle the start of an individual finger interaction */
@@ -509,15 +568,17 @@
 
 
 	/* Prevent window movement (iOS fix) */
-	var preventDefault = function (e) { e.preventDefault() };
+	(function () {
+		var preventDefault = function (e) { e.preventDefault() };
 
-	Touchy.stopWindowBounce = function () {
-		bind(window, 'touchmove', preventDefault);
-	};
+		Touchy.stopWindowBounce = function () {
+			bind(window, 'touchmove', preventDefault);
+		};
 
-	Touchy.startWindowBounce = function () {
-		unbind(window, 'touchmove', preventDefault);
-	};
+		Touchy.startWindowBounce = function () {
+			unbind(window, 'touchmove', preventDefault);
+		};
+	})();
 
 
 
