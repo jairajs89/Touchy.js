@@ -30,7 +30,8 @@ Touchy(touchMe, function (hand, finger) {
 
 	// This callback is fired when the finger initially touches the screen.
 	finger.on('start', function (point) {
-		// 'point' is a coordinate of the form { id: <string>, x: <number>, y: <number>, time: <date> }
+		// 'point' is a coordinate of the following form:
+		// { id: <string>, x: <number>, y: <number>, time: <date> }
 	});
 
 	// This callback is fired when finger moves.
