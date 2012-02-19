@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 	<head>
-		<title>Touchy demo - Draw dots</title>
+		<title>Touchy - Demo</title>
 
 		<meta content="yes" name="apple-mobile-web-app-capable">
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
@@ -21,14 +21,6 @@
 				position: absolute;
 				margin: -12px 0 0 -12px;
 				height: 25px;
-				width: 25px;
-				background: #000;
-				border-radius: 12px;
-			}
-
-			.line {
-				z-index: 2;
-				position: absolute;
 				width: 25px;
 				background: #000;
 				border-radius: 12px;
@@ -53,7 +45,7 @@
 				touchMe.appendChild(elem);
 			}
 
-			Touchy(touchMe, function (hand, finger) {
+			Touchy(touchMe, true, function (hand, finger) {
 				finger.on('start', drawPoint);
 				finger.on('move' , drawPoint);
 				finger.on('end'  , drawPoint);

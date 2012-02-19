@@ -321,6 +321,8 @@
 
 
 	/* Socket-style finger management for multi-touch events */
+	var plugins = {};
+
 	function Touchy (elem, handleMouse, settings) {
 		if (typeof settings == 'undefined') {
 			settings = handleMouse;
@@ -329,6 +331,27 @@
 
 		if (typeof settings == 'function') {
 			settings = { any: settings };
+		}
+
+		for (var name in plugins) {
+			if (name in settings) {
+				var updates = plugins[name]( settings[name] );
+
+				for (var handlerType in updates) {
+					if (handlerType in settings) {
+						settings[handlerType] = (function (handler1, handler2) {
+							return function () {
+								handler1.call(this, arguments);
+								handler2.call(this, arguments);
+							};
+						})(settings[handlerType], updates[handlerType]);
+					}
+
+					else {
+						settings[handlerType] = updates[handlerType];
+					}
+				}
+			}
 		}
 
 		var mainHand = new Hand(),
@@ -565,6 +588,15 @@
 		}
 	};
 
+	/* Plugin support for custom touch handling */
+	Touchy.plugin = function (name, callback) {
+		if (name in plugins) {
+			throw 'Touchy: ' + name + ' plugin already defined';
+		}
+
+		plugins[name] = callback;
+	};
+
 
 
 	/* Prevent window movement (iOS fix) */
@@ -584,4 +616,16 @@
 
 	/* Publicise object */
 	window.Touchy = Touchy;
+
+	if (typeof jQuery == 'function') {
+		jQuery.fn.touchy = function () {
+			var args = Array.prototype.slice.call(arguments);
+
+			this.each(function () {
+				var thisArgs = args.slice();
+				thisArgs.unshift(this);
+				Touchy.apply(window, thisArgs);
+			});
+		};
+	}
 })();
