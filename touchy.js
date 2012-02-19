@@ -579,7 +579,7 @@
 				var point = finger.points[ finger.points.length - 1 ];
 				finger.points.push(point);
 				points.push(point);
-				finger.trigger('end', finger.point);
+				finger.trigger('end', point);
 			});
 
 			multiHand.trigger('end', points);
