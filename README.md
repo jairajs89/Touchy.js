@@ -1,7 +1,7 @@
 ## Touchy.js
 ### Because some things just need to be touched.
 
-Touchy.js is a simple light-weight (1.64 kb compressed) JavaScript library for dealing with touch events in the browser. With no dependencies, just add the script to your page and start hacking.
+Touchy.js is a simple light-weight (1.65 kb compressed) JavaScript library for dealing with touch events in the browser. With no dependencies, just add the script to your page and start hacking.
 
 
 ## Quick example
@@ -110,4 +110,39 @@ var touchMe = document.getElementById('touch-me');
 // events along with touch events. This is good for testing on desktop.
 Touchy(touchMe, true, callback); // For all finger events
 Touchy(touchMe, true, { one: ..., two: ... }); // For multi-touch finger events
+```
+
+
+# Plugin support
+
+``` javascript
+// Define a plugin
+Touchy.plugin('myPlugin', function (elem, settings) {
+	// Write your plugin here.
+	// This will be executed each time the plugin is applied to an element.
+
+	// 'elem' is the element being touched
+	// 'settings' is the the object passed during usage of the plugin
+
+	// Return an object to setup Touchy for the element.
+	// This is equivalent to Touchy(elem, { one: ..., two: ... });
+	return { one: ..., two: ... };
+});
+
+// Use a plugin
+var touchMe = document.getElementById('touch-me');
+Touchy(touchMe, {
+	myPlugin: { these: 'are', your: 'settings' }
+});
+```
+
+
+# jQuery wrapper
+
+``` javascript
+var touchMe = document.getElementById('touch-me');
+Touchy(touchMe, { one: ..., two: ... });
+
+// This is equivalent to the following jQuery code:
+$('#touch-me').touchy({ one: ..., two: ... });
 ```

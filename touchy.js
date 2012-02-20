@@ -335,7 +335,11 @@
 
 		for (var name in plugins) {
 			if (name in settings) {
-				var updates = plugins[name]( settings[name] );
+				var updates = plugins[name](elem, settings[name]);
+
+				if (typeof updates == 'function') {
+					updates = { any: updates };
+				}
 
 				for (var handlerType in updates) {
 					if (handlerType in settings) {
