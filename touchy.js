@@ -625,7 +625,7 @@
 	/* Publicise object */
 	window.Touchy = Touchy;
 
-	if (typeof window.jQuery == 'function') {
+	if (window.jQuery && window.jQuery.fn) {
 		window.jQuery.fn.touchy = function () {
 			var args = Array.prototype.slice.call(arguments);
 
