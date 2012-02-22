@@ -7,7 +7,11 @@
 
 
 
-(function () {
+(function (window) {
+	window = window || {};
+
+
+
 	/* Make sure I can itereate through arrays */
 	var forEach = function () {
 		if (Array.prototype.forEach) {
@@ -619,10 +623,10 @@
 
 
 	/* Publicise object */
-	window.Touchy = Touchy;
+	window['Touchy'] = Touchy;
 
-	if (typeof jQuery == 'function') {
-		jQuery.fn.touchy = function () {
+	if (typeof window.jQuery == 'function') {
+		window.jQuery.fn.touchy = function () {
 			var args = Array.prototype.slice.call(arguments);
 
 			this.each(function () {
@@ -632,4 +636,4 @@
 			});
 		};
 	}
-})();
+})(window);
