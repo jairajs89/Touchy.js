@@ -623,7 +623,7 @@
 
 
 	/* Publicise object */
-	window['Touchy'] = Touchy;
+	window.Touchy = Touchy;
 
 	if (typeof window.jQuery == 'function') {
 		window.jQuery.fn.touchy = function () {
