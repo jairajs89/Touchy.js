@@ -3,6 +3,7 @@
 	Socket-style finger management for touch events
 
 	Jairaj Sethi
+	http://creativecommons.org/licenses/by/3.0/
 */
 
 
