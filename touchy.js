@@ -161,7 +161,7 @@
 		else {
 			proto._super = superMethod;
 		}
-	};
+	}
 
 
 
