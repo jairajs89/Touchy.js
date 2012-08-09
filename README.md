@@ -45,13 +45,11 @@ var toucher = Touchy(touchMe, function (hand, finger) {
 
 	// This callback is fired when finger is released from the screen.
 	finger.on('end', function (point) {
-		// 'finger.points' holds the entire path that the finger moved through.
-		finger.points.forEach(function (point) {
-			console.log('time:', point.time);
-			console.log('left:', point.x   );
-			console.log(' top:', point.y   );
-		});
+		console.log('finger stopped moving');
 	});
+
+	// finger.lastPoint refers to the last touched point by the
+	// finger at any given time.
 });
 ```
 
