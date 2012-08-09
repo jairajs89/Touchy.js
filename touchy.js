@@ -8,7 +8,7 @@
 
 
 
-(function (window) {
+(function (window, document, clik, Zepto, jQuery) {
 	window = window || {};
 
 
@@ -723,8 +723,29 @@
 	/* Publicise object */
 	window.Touchy = Touchy;
 
-	if (window.jQuery && window.jQuery.fn) {
-		window.jQuery.fn.touchy = function () {
+	if (clik) {
+		clik.plugin('touchy', function () {
+			Touchy.apply(window, arguments);
+		});
+	}
+
+	if (Zepto) {
+		Zepto.extend(Zepto.fn, {
+			touchy : function () {
+				var args = Array.prototype.slice.call(arguments);
+
+				this.forEach(function (elem) {
+					var thisArgs = args.slice();
+					thisArgs.unshift(this);
+					Touchy.apply(window, thisArgs);
+				});
+				return this;
+			}
+		});
+	}
+
+	if (jQuery) {
+		jQuery.fn.touchy = function () {
 			var args = Array.prototype.slice.call(arguments);
 
 			this.each(function () {
@@ -734,4 +755,4 @@
 			});
 		};
 	}
-})(window);
+})(window, document, window.clik, window.Zepto, window.jQuery);
