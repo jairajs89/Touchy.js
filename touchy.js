@@ -272,7 +272,7 @@
 	function Finger (id) {
 		this._super('constructor');
 		this.id        = id;
-		this.points    = [];
+		this.lastPoint;
 	}
 	inheritsFrom(Finger, EventBus);
 
@@ -524,8 +524,7 @@
 
 		forEach(changedTouches, function (touch) {
 			var finger = new Finger(touch.id);
-
-			finger.points.push(touch);
+			finger.lastPoint = touch;
 			newFingers.push([ finger, touch ]);
 			self.mainHand.fingers.push(finger);
 		});
@@ -546,7 +545,11 @@
 		forEach(changedTouches, function (touch) {
 			var finger = self.mainHand.get(touch.id);
 
-			finger.points.push(touch);
+			if ( !finger ) {
+				return;
+			}
+
+			finger.lastPoint = touch;
 			movedFingers.push([ finger, touch ]);
 		});
 
@@ -566,7 +569,11 @@
 			var finger = self.mainHand.get(touch.id),
 				index;
 
-			finger.points.push(touch);
+			if ( !finger ) {
+				return;
+			}
+
+			finger.lastPoint = touch;
 			endFingers.push([ finger, touch ]);
 
 			index = indexOf(self.mainHand.fingers, finger);
@@ -593,7 +600,12 @@
 
 		forEach(changedTouches, function (touch) {
 			var finger = self.multiHand.get(touch.id);
-			finger.points.push(touch);
+
+			if( !finger ) {
+				return;
+			}
+
+			finger.lastPoint = touch;
 			movedFingers.push([ finger, touch ]);
 		});
 
@@ -637,7 +649,7 @@
 		forEach(touches, function (touch) {
 			var finger = new Finger(touch.id);
 
-			finger.points.push(touch);
+			finger.lastPoint = touch;
 			newFingers.push([ finger, touch ]);
 			self.multiHand.fingers.push(finger);
 		});
@@ -668,8 +680,7 @@
 		var points = [];
 
 		forEach(this.multiHand.fingers, function (finger) {
-			var point = finger.points[ finger.points.length - 1 ];
-			finger.points.push(point);
+			var point = finger.lastPoint;
 			points.push(point);
 			finger.trigger('end', point);
 		});
