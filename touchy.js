@@ -272,7 +272,7 @@
 	function Finger (id) {
 		this._super('constructor');
 		this.id        = id;
-		this.lastPoint;
+		this.lastPoint = null;
 	}
 	inheritsFrom(Finger, EventBus);
 
