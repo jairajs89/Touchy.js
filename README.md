@@ -1,3 +1,8 @@
+### Zerver
+
+[Check out Zerver](https://github.com/jairajs89/zerver) - client-integrated webapp server for Node.js.
+
+
 ## Touchy.js
 ### Because some things just need to be touched.
 
