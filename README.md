@@ -6,7 +6,7 @@
 ## Touchy.js
 ### Because some things just need to be touched.
 
-Touchy.js is a simple light-weight (1.98 kb compressed) JavaScript library for dealing with touch events in the browser. With no dependencies, just add the script to your page and start hacking.
+Touchy.js is a simple light-weight (1.98 kb minified+gzip) JavaScript library for dealing with touch events in the browser. With no dependencies, just add the script to your page and start hacking.
 
 
 ## Quick example
