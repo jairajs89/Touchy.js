@@ -380,14 +380,16 @@
 		}
 		this.running = true;
 
-		bind(this.elem, 'touchstart', this.touchstart() );
-		bind(this.elem, 'touchmove' , this.touchmove()  );
-		bind(this.elem, 'touchend'  , this.touchend()   );
+		bind(this.elem, 'touchstart' , this.touchstart());
+		bind(this.elem, 'touchmove'  , this.touchmove() );
+		bind(this.elem, 'touchcancel', this.touchend()  );
+		bind(this.elem, 'touchend'   , this.touchend()  );
 
 		if ( this.handleMouse ) {
-			bind(this.elem, 'mousedown' , this.mousedown() );
-			bind(this.elem, 'mouseup'   , this.mouseup()   );
-			bind(this.elem, 'mousemove' , this.mousemove() );
+			bind(this.elem, 'mousedown', this.mousedown());
+			bind(this.elem, 'mouseup'  , this.mouseup()  );
+			bind(this.elem, 'mouseout' , this.mouseup()  );
+			bind(this.elem, 'mousemove', this.mousemove());
 		}
 	};
 
@@ -398,13 +400,15 @@
 		}
 		this.running = false;
 
-		unbind(this.elem, 'touchstart', this.touchstart() );
-		unbind(this.elem, 'touchmove' , this.touchmove()  );
-		unbind(this.elem, 'touchend'  , this.touchend()   );
+		unbind(this.elem, 'touchstart' , this.touchstart());
+		unbind(this.elem, 'touchmove'  , this.touchmove() );
+		unbind(this.elem, 'touchend'   , this.touchend()  );
+		unbind(this.elem, 'touchcancel', this.touchend()  );
 
-		unbind(this.elem, 'mousedown' , this.mousedown() );
-		unbind(this.elem, 'mouseup'   , this.mouseup()   );
-		unbind(this.elem, 'mousemove' , this.mousemove() );
+		unbind(this.elem, 'mousedown', this.mousedown());
+		unbind(this.elem, 'mouseup'  , this.mouseup()  );
+		unbind(this.elem, 'mouseout' , this.mouseup()  );
+		unbind(this.elem, 'mousemove', this.mousemove());
 	};
 
 	/* Return a handler for DOM touchstart event */
@@ -485,6 +489,16 @@
 		if ( !this._mouseup ) {
 			var self = this;
 			this._mouseup = function (e) {
+				if (e.type === 'mouseout') {
+					var elem = e.relatedTarget || e.toElement;
+					while (elem) {
+						if (elem === self.elem) {
+							return;
+						}
+						elem = elem.parentNode;
+					}
+				}
+
 				var touches;
 
 				if ( self.mouseID ) {
