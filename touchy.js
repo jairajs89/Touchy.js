@@ -737,12 +737,6 @@
 	/* Publicise object */
 	window.Touchy = Touchy;
 
-	if (clik) {
-		clik.plugin('touchy', function () {
-			Touchy.apply(window, arguments);
-		});
-	}
-
 	if (Zepto) {
 		Zepto.extend(Zepto.fn, {
 			touchy : function () {
