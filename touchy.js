@@ -8,7 +8,7 @@
 
 
 
-(function (window, document, clik, Zepto, jQuery) {
+(function (window, document, Zepto, jQuery) {
 	window = window || {};
 
 
@@ -763,4 +763,4 @@
 			});
 		};
 	}
-})(window, document, window.clik, window.Zepto, window.jQuery);
+})(window, document, window.Zepto, window.jQuery);
